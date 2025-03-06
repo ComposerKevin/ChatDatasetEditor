@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSONL Editor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>JSONL Editor</h1>
+
+        <section id="fileListSection">
+            <h2>Select a File</h2>
+            <div class="button-bar">
+                <button onclick="createNewFile()" class="button primary">Create New File</button>
+            </div>
+            <ul id="fileList">
+                </ul>
+        </section>
+
+        <section id="editorSection" style="display:none;">
+            <h2>Editing File: <span id="currentFileName"></span></h2>
+
+            <div id="pageNavigation" class="pagination">
+                <button onclick="prevPage()" id="prevPageButton" class="button nav" disabled>&lt; PREV</button>
+                <select id="pageDropdown" class="page-select" onchange="gotoPage(this.value)"></select>
+                <span id="pageInfo" class="page-info">Page 1 of 1</span>
+                <button onclick="nextPage()" id="nextPageButton" class="button nav" disabled>NEXT &gt;</button>
+            </div>
+
+            <div id="jsonlEditor">
+                </div>
+
+            <div id="editorButtons" class="button-bar editor-bar">
+                <button onclick="addJsonObject()" class="button secondary">Add JSON Object</button>
+                <button onclick="saveFile()" class="button primary">Save</button>
+                <button onclick="showFileList()" class="button">Back to File List</button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        let currentFile = null;
+        let jsonData = [];
+        let currentPageIndex = 0; // Start at the first page
+
+        function loadFileList() {
+            fetch('/api/listFiles')
+                .then(response => response.json())
+                .then(data => {
+                    const fileList = document.getElementById('fileList');
+                    fileList.innerHTML = ''; // Clear existing list
+                    data.files.forEach(file => {
+                        const listItem = document.createElement('li');
+                        listItem.classList.add('file-item');
+                        const link = document.createElement('a');
+                        link.href = '#';
+                        link.textContent = file;
+                        link.onclick = function() { loadFileContent(file); return false; };
+                        listItem.appendChild(link);
+
+                        const cloneLink = document.createElement('a');
+                        cloneLink.href = '#';
+                        cloneLink.textContent = '(clone)';
+                        cloneLink.classList.add('clone-link');
+                        cloneLink.onclick = function(event) {
+                            event.stopPropagation(); // Prevent loadFileContent from being called
+                            cloneFile(file);
+                            return false;
+                        };
+                        listItem.appendChild(cloneLink);
+
+                        fileList.appendChild(listItem);
+                    });
+                });
+        }
+
+        function loadFileContent(filename) {
+            currentFile = filename;
+            document.getElementById('currentFileName').textContent = filename;
+            fetch(`/api/loadFile?file=${filename}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert("Error loading file: " + data.error);
+                        return;
+                    }
+                    jsonData = data.data;
+                    currentPageIndex = 0; // Reset to first page when loading new file
+                    renderEditor();
+                    document.getElementById('fileListSection').style.display = 'none';
+                    document.getElementById('editorSection').style.display = 'block';
+                });
+        }
+
+        function renderEditor() {
+            const editor = document.getElementById('jsonlEditor');
+            editor.innerHTML = ''; // Clear existing editor
+
+            if (jsonData.length === 0) {
+                editor.textContent = "No JSON objects in this file.";
+                updateNavigation(); // Update buttons and dropdown even with empty data
+                return;
+            }
+
+            const jsonObject = jsonData[currentPageIndex];
+
+            const jsonObjectDiv = document.createElement('div');
+            jsonObjectDiv.className = 'json-object';
+
+            const messagesHeader = document.createElement('h3');
+            messagesHeader.textContent = `JSON Object ${currentPageIndex + 1}`;
+            jsonObjectDiv.appendChild(messagesHeader);
+
+            const messagesListDiv = document.createElement('div');
+            messagesListDiv.className = 'messages-list';
+
+            jsonObject.messages.forEach((message, messageIndex) => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+
+                const roleLabel = document.createElement('label');
+                roleLabel.textContent = 'Role:';
+                const roleInput = document.createElement('input');
+                roleInput.type = 'text';
+                roleInput.value = message.role;
+                roleInput.onchange = function() { jsonData[currentPageIndex].messages[messageIndex].role = this.value; };
+                messageDiv.appendChild(roleLabel);
+                messageDiv.appendChild(roleInput);
+
+                const contentLabel = document.createElement('label');
+                contentLabel.textContent = 'Content:';
+                const contentTextarea = document.createElement('textarea');
+                contentTextarea.value = message.content;
+                contentTextarea.rows = 3;
+                contentTextarea.onchange = function() { jsonData[currentPageIndex].messages[messageIndex].content = this.value; };
+                messageDiv.appendChild(contentLabel);
+                messageDiv.appendChild(contentTextarea);
+
+                const removeMessageButton = document.createElement('button');
+                removeMessageButton.textContent = 'Remove Message';
+                removeMessageButton.classList.add('button', 'remove-message');
+                removeMessageButton.onclick = function() { removeMessageFromObject(messageIndex); }; // messageIndex relative to current JSON object
+                messageDiv.appendChild(removeMessageButton);
+
+                messagesListDiv.appendChild(messageDiv);
+            });
+            jsonObjectDiv.appendChild(messagesListDiv);
+
+            const addObjectButtonsDiv = document.createElement('div'); // Container for object level buttons
+            addObjectButtonsDiv.classList.add('object-buttons');
+
+            const addMessageButton = document.createElement('button');
+            addMessageButton.textContent = 'Add Message';
+            addMessageButton.classList.add('button', 'secondary');
+            addMessageButton.onclick = function() { addMessageToObject(); }; // No index needed, current object
+            addObjectButtonsDiv.appendChild(addMessageButton);
+
+            const removeJsonObjectButton = document.createElement('button');
+            removeJsonObjectButton.textContent = 'Remove JSON Object';
+            removeJsonObjectButton.classList.add('button', 'remove-object');
+            removeJsonObjectButton.onclick = function() { removeJsonObject(); }; // No index needed, current object
+            addObjectButtonsDiv.appendChild(removeJsonObjectButton);
+
+            jsonObjectDiv.appendChild(addObjectButtonsDiv);
+
+
+            editor.appendChild(jsonObjectDiv);
+
+            updateNavigation(); // Update navigation buttons and dropdown after rendering
+        }
+
+        function updateNavigation() {
+            const prevButton = document.getElementById('prevPageButton');
+            const nextButton = document.getElementById('nextPageButton');
+            const pageDropdown = document.getElementById('pageDropdown');
+            const pageInfoSpan = document.getElementById('pageInfo');
+
+            pageDropdown.innerHTML = ''; // Clear dropdown options
+
+            if (jsonData.length === 0) {
+                prevButton.disabled = true;
+                nextButton.disabled = true;
+                pageDropdown.disabled = true;
+                pageInfoSpan.textContent = "Page 0 of 0";
+                return;
+            }
+
+            for (let i = 0; i < jsonData.length; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.text = `Page ${i + 1}`;
+                pageDropdown.appendChild(option);
+            }
+            pageDropdown.value = currentPageIndex; // Set selected option
+
+            pageDropdown.disabled = false;
+            pageInfoSpan.textContent = `Page ${currentPageIndex + 1} of ${jsonData.length}`;
+
+            prevButton.disabled = currentPageIndex <= 0;
+            nextButton.disabled = currentPageIndex >= jsonData.length - 1;
+        }
+
+        function prevPage() {
+            if (currentPageIndex > 0) {
+                currentPageIndex--;
+                renderEditor();
+            }
+        }
+
+        function nextPage() {
+            if (currentPageIndex < jsonData.length - 1) {
+                currentPageIndex++;
+                renderEditor();
+            }
+        }
+
+        function gotoPage(pageIndex) {
+            currentPageIndex = parseInt(pageIndex);
+            renderEditor();
+        }
+
+
+        function addMessageToObject() {
+            jsonData[currentPageIndex].messages.push({ role: '', content: '' });
+            renderEditor();
+        }
+
+        function removeMessageFromObject(messageIndex) {
+            jsonData[currentPageIndex].messages.splice(messageIndex, 1);
+            renderEditor();
+        }
+
+
+        function addJsonObject() {
+            jsonData.push({ messages: [] });
+            currentPageIndex = jsonData.length - 1; // Go to the new page
+            renderEditor();
+        }
+
+        function removeJsonObject() {
+            if (jsonData.length === 0) return; // Prevent error if no objects left
+            jsonData.splice(currentPageIndex, 1);
+            if (currentPageIndex >= jsonData.length && currentPageIndex > 0) {
+                currentPageIndex = jsonData.length - 1; // Go to the last existing page if current was deleted
+            } else if (jsonData.length === 0) {
+                currentPageIndex = 0; // Reset if all objects are deleted
+            }
+            renderEditor();
+        }
+
+
+        function saveFile() {
+            if (!currentFile) {
+                alert("No file selected to save.");
+                return;
+            }
+            fetch(`/api/save?file=${currentFile}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(jsonData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("File saved successfully!");
+                } else {
+                    alert("Error saving file: " + data.error);
+                }
+            });
+        }
+
+        function showFileList() {
+            document.getElementById('editorSection').style.display = 'none';
+            document.getElementById('fileListSection').style.display = 'block';
+            currentFile = null;
+            jsonData = [];
+            currentPageIndex = 0; // Reset page index
+        }
+
+        function createNewFile() {
+            const filename = prompt("Enter new filename (must end with .jsonl):");
+            if (filename) {
+                if (!filename.endsWith('.jsonl')) {
+                    alert("Filename must end with '.jsonl'");
+                    return;
+                }
+                fetch(`/api/createFile?file=${filename}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(`File '${data.filename}' created successfully!`);
+                            loadFileList(); // Refresh file list
+                            loadFileContent(data.filename); // Load the new file
+                        } else {
+                            alert("Error creating file: " + data.error);
+                        }
+                    });
+            }
+        }
+
+        function cloneFile(filename) {
+            const newFilename = prompt(`Clone '${filename}' to new filename (must end with .jsonl):`);
+            if (newFilename) {
+                if (!newFilename.endsWith('.jsonl')) {
+                    alert("New filename must end with '.jsonl'");
+                    return;
+                }
+                fetch(`/api/cloneFile?file=${filename}&new_file=${newFilename}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(`File '${filename}' cloned to '${data.filename}' successfully!`);
+                            loadFileList(); // Refresh file list
+                            loadFileContent(data.filename); // Load the new file
+                        } else {
+                            alert("Error cloning file: " + data.error);
+                        }
+                    });
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', loadFileList); // Load file list on page load
+    </script>
+</body>
+</html>

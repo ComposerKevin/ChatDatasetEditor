@@ -1,0 +1,239 @@
+/* static/style.css */
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f7f9; /* Light background color */
+    color: #333; /* Darker text color for contrast */
+    line-height: 1.6;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff; /* White container background */
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+}
+
+h1, h2 {
+    color: #375a7f; /* Primary heading color */
+    margin-top: 0;
+}
+
+h2 {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+section {
+    margin-bottom: 20px;
+}
+
+/* File List Section */
+#fileListSection ul {
+    list-style: none;
+    padding: 0;
+}
+
+.file-item {
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    background-color: #f0f0f0; /* Light gray file item background */
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-item:hover {
+    background-color: #e0e0e0; /* Slightly darker on hover */
+}
+
+.file-item a {
+    text-decoration: none;
+    color: #007bff; /* Blue link color */
+}
+
+.clone-link {
+    text-decoration: none;
+    color: #6c757d; /* Gray clone link color */
+    margin-left: 10px;
+    font-size: 0.9em;
+}
+.clone-link:hover {
+    color: #0056b3; /* Darker blue on hover */
+}
+
+
+/* Editor Section */
+#editorSection h2 {
+    margin-top: 0;
+}
+
+#editorButtons {
+    margin-top: 20px;
+}
+
+/* Pagination Styles */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.pagination button {
+    margin: 0 10px;
+}
+
+.page-select {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    appearance: none; /* Remove default dropdown arrow */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 25px; /* Make space for custom arrow if needed */
+    background-image: url('data:image/svg+xml;utf8,<svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+    background-repeat: no-repeat;
+    background-position-x: 100%;
+    background-position-y: 5px;
+}
+.page-select:focus {
+    outline: none;
+    border-color: #007bff; /* Highlight on focus */
+    box-shadow: 0 0 0 2px rgba(0,123,255,.25);
+}
+
+.page-info {
+    margin: 0 10px;
+    font-size: 0.9em;
+    color: #777;
+}
+
+
+/* JSON Object Styles */
+.json-object {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    background-color: #fff;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.05); /* Very subtle shadow */
+}
+
+.messages-list {
+    margin-top: 10px;
+}
+
+.message {
+    padding: 12px;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    display: flex; /* Use flexbox for message layout */
+    flex-direction: column; /* Stack labels and inputs vertically */
+}
+
+.message label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555; /* Slightly darker label color */
+}
+
+.message input[type="text"], .message textarea {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: inherit; /* Inherit body font */
+    font-size: 1em;
+}
+
+.message textarea {
+    font-family: monospace; /* Monospace for text areas */
+    min-height: 80px; /* Minimum height for textareas */
+}
+
+.button {
+    background-color: #e0e7ee; /* Default button background */
+    color: #333;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease; /* Smooth hover transition */
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.button:hover {
+    background-color: #d0d8e0; /* Slightly darker on hover */
+}
+
+.button:active {
+    background-color: #c0c8d0; /* Even darker on active/click */
+}
+
+.button.primary {
+    background-color: #007bff; /* Primary button color */
+    color: white;
+}
+
+.button.primary:hover {
+    background-color: #0056b3; /* Darker primary on hover */
+}
+
+.button.secondary {
+    background-color: #6c757d; /* Secondary button color (gray) */
+    color: white;
+}
+
+.button.secondary:hover {
+    background-color: #5a6268; /* Darker secondary on hover */
+}
+
+.button.nav {
+    background-color: #f8f9fa; /* Navigation button background */
+    border: 1px solid #ddd;
+    color: #555;
+}
+
+.button.nav:hover {
+    background-color: #e9ecef;
+}
+
+.button.remove-message, .button.remove-object {
+    background-color: #dc3545; /* Danger/remove button color (red) */
+    color: white;
+}
+
+.button.remove-message:hover, .button.remove-object:hover {
+    background-color: #c82333; /* Darker danger on hover */
+}
+
+.object-buttons {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-start; /* Align buttons to the start */
+    gap: 10px; /* Spacing between buttons */
+}
+
+.button-bar {
+    margin-bottom: 15px;
+}
+.button-bar button {
+    margin-right: 10px;
+}
+.button-bar button:last-child {
+    margin-right: 0;
+}
