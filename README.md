@@ -1,6 +1,7 @@
 # JSONL Editor - In-Browser JSONL File Editor
 
 Screenshot of JSONL Editor
+![Screenshot](https://github.com/ComposerKevin/ChatDatasetEditor/blob/main/screenshot.png?raw=true "Screenshot")
 
 # Description
 
