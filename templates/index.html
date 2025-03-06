@@ -157,6 +157,13 @@
             addMessageButton.onclick = function() { addMessageToObject(); }; // No index needed, current object
             addObjectButtonsDiv.appendChild(addMessageButton);
 
+            const cloneJsonObjectButton = document.createElement('button'); // Clone Object Button
+            cloneJsonObjectButton.textContent = 'Clone Object';
+            cloneJsonObjectButton.classList.add('button', 'secondary');
+            cloneJsonObjectButton.onclick = function() { cloneJsonObject(); };
+            addObjectButtonsDiv.appendChild(cloneJsonObjectButton);
+
+
             const removeJsonObjectButton = document.createElement('button');
             removeJsonObjectButton.textContent = 'Remove JSON Object';
             removeJsonObjectButton.classList.add('button', 'remove-object');
@@ -238,6 +245,16 @@
             currentPageIndex = jsonData.length - 1; // Go to the new page
             renderEditor();
         }
+
+        function cloneJsonObject() {
+            if (jsonData.length === 0) return;
+            const currentObject = jsonData[currentPageIndex];
+            const clonedObject = JSON.parse(JSON.stringify(currentObject)); // Deep clone
+            jsonData.splice(currentPageIndex + 1, 0, clonedObject); // Insert after current page
+            currentPageIndex++; // Move to the cloned page
+            renderEditor();
+        }
+
 
         function removeJsonObject() {
             if (jsonData.length === 0) return; // Prevent error if no objects left
